@@ -1,10 +1,9 @@
-from time import time
 from crudArhivos import Archivo
-from datetime import date
+from operative_system.limpiar_consola import clean_screen
 from abc import ABC,abstractmethod
-from helpers import gotoxy,borrarPantalla
-import os,time
-    
+from console_gotoxy import gotoxy
+
+
 class Empresa:
     def __init__(self, razonSocial, direccion, telefono, ruc):
         self.razonSocial = razonSocial
@@ -18,41 +17,40 @@ class Empresa:
         - Dirección : {} 
         - Teléfono: {}'''.format(self.razonSocial,self.ruc, 
                                      self.direccion, self.telefono))
-       
+
+
 class Departamento:
-    def __init__(self, descripcion,id=1):
+    def __init__(self, descripcion, id) -> None:
         self.__id = id
         self.descripcion = descripcion
        
     @property
-    def id(self):
+    def id(self) -> str:
         return self.__id
 
-    def mostrarDepartamento(self):
-        print('{}. DEPARTAMENTO DE {}'.format(self.id,self.descripcion))
-        print(' ')
+    def getDepartamento(self) -> list:
+        return [self.id, self.descripcion]
+
 
 class Cargo:
-    def __init__(self, descripcion,id=1):
+    def __init__(self, descripcion, id) -> None:
         self.__id = id
         self.descripcion = descripcion
        
     @property
-    def id(self):
+    def id(self) -> str:
         return self.__id
 
-    def mostrarCargo(self):
-        print('{}. CARGO {}'.format(self.id,self.descripcion))
-   
-    def getCargo(self):
-        return  [str(self.id),self.descripcion]
-     
-    
+    def getCargo(self) -> list:
+        return  [self.id, self.descripcion]
+
+
 class Empleado(ABC): 
-    def __init__(self,nombre,departamento,cargo, direccion, cedula, telefono, fechaIngreso, sueldo,id=1):
+    def __init__(self, nombre, departamento, cargo, direccion, cedula,
+                 telefono, fechaIngreso, sueldo, id) -> None:
         self.__id = id
         self.nombre = nombre
-        self.departamento=departamento
+        self.departamento = departamento
         self.cargo = cargo
         self.direccion = direccion
         self.cedula = cedula
@@ -61,49 +59,44 @@ class Empleado(ABC):
         self.sueldo = sueldo
 
     @property
-    def id(self):
+    def id(self) -> str:
         return self.__id
 
     @abstractmethod
-    def valorHora(self):  
-        return self.sueldo/240
-    
+    def valorHora(self) -> float:  
+        return round(self.sueldo / 240, 2)
 
-    def mostrarEmpleado(self):
-        print(' {} Empleado : {} Cedula: {} dirección : {} Cargo: {} Dpto: {}'.format(self.id,self.nombre,self.cedula,self.direccion,self.cargo.descripcion,self.departamento.descripcion),end=" ")
 
-    
 class Administrativo(Empleado):
-    def __init__(self,nombre,departamento,cargo, direccion, cedula, telefono, fechaIngreso, sueldo,id,comision= True):
-        super().__init__(nombre,departamento,cargo, direccion, cedula, telefono, fechaIngreso, sueldo,id)
+    def __init__(self, nombre='', departamento='', cargo='', direccion='', cedula='',
+                 telefono='', fechaIngreso='', sueldo='', id='', comision=False) -> None:
+        super().__init__(nombre, departamento, cargo, direccion, cedula,
+                         telefono, fechaIngreso, sueldo, id)
         self.comision = comision
 
-   
-    def mostrarEmpleado(self): 
-        print(' {} Administrativo : {} Cedula: {} dirección : {} Cargo: {} Dpto: {}'.format(self.id,self.nombre,self.cedula,self.direccion,self.cargo.descripcion,self.departamento.descripcion),end=" ")
-        print("Comision:{}".format(self.comision))
-
-    def valorHora(self):
+    def valorHora(self) -> float:
         return super().valorHora()
     
-    def getEmpleado(self):
-        return  [self.id,self.nombre,str(self.departamento.id),str(self.cargo.id),self.direccion,self.cedula,self.telefono,str(self.fechaIngreso),str(self.sueldo),str(self.comision)]
-    
+    def getEmpleado(self) -> list:
+        return  [self.id, self.departamento.id, self.cargo.id, self.nombre, self.direccion, self.cedula,
+                 self.telefono, str(self.fechaIngreso), str(self.sueldo), str(self.comision)]
+
+
 class Obrero(Empleado):
-    def __init__(self,nombre,departamento,cargo, direccion, cedula, telefono, fechaIngreso, sueldo,id, cc= True):
-        super().__init__(nombre,departamento,cargo, direccion, cedula, telefono, fechaIngreso, sueldo,id)
+    def __init__(self,nombre, departamento, cargo, direccion, cedula,
+                 telefono, fechaIngreso, sueldo, id, cc=False) -> None:
+        super().__init__(nombre, departamento, cargo, direccion, cedula,
+                         telefono, fechaIngreso, sueldo, id)
         self.cc = cc
 
-    def mostrarEmpleado(self): 
-        print(' {} Obrero : {} Cedula: {} dirección : {} Cargo: {} Dpto: {}'.format(self.id,self.nombre,self.cedula,self.direccion,self.cargo.descripcion,self.departamento.descripcion),end=" ")
-        print("CColectivo:{}".format(self.cc))
-
-    def valorHora(self):
+    def valorHora(self) -> float:
         return super().valorHora()
-    
-    def getEmpleado(self):
-        return  [self.id,self.nombre,str(self.departamento.id),str(self.cargo.id),self.direccion,self.cedula,self.telefono,str(self.fechaIngreso),str(self.sueldo),str(self.cc)]
-          
+
+    def getEmpleado(self) -> list:
+        return  [self.id, self.nombre, str(self.departamento.id), str(self.cargo.id), self.direccion, 
+                 self.cedula, self.telefono, str(self.fechaIngreso), str(self.sueldo), str(self.cc)]
+
+
 class Deduccion:
     def __init__(self, iess, comision, antiguedad):
         self.__iess = iess    
@@ -198,7 +191,7 @@ class CalculoRol(ABC):
         pass
     @abstractmethod
     def getPrestamo(self,aamm):
-        pass 
+        pass
      
     
 class Nomina:
@@ -234,7 +227,7 @@ class Nomina:
         return self.detalleNomina
     
     def mostrarCabeceraNomina(self,razonSocial, direccion, telefono, ruc,tipoRol):
-        borrarPantalla()
+        clean_screen()
         print('              {} Ruc : {} Teléfono : {} Dirección: {}'.format(razonSocial,ruc,telefono,direccion))
         print('--------------------------------------------------------------------------------------------------------------------')
         print('FECHA: {}  N O M I N A   D E   P A G O  D E   E M P LE A D O S: {}  '.format(self.fecha,tipoRol))
