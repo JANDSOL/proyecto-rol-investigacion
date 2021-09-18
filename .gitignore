@@ -9,3 +9,6 @@ images/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Ocultamiento momentaneo
+archivos/
