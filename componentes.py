@@ -2,7 +2,7 @@ from unicodedata import normalize as normalizar_cadena
 from datetime import date
 from operative_system.limpiar_consola import clean_screen
 from espera_consola.retraso import espera_consola
-from helpers import gotoxy
+from console_gotoxy import gotoxy
 from crudArhivos import Archivo
 
 

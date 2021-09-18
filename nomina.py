@@ -1,33 +1,108 @@
+from operative_system.limpiar_consola import clean_screen
+from espera_consola.retraso import espera_consola
 from componentes import Menu,Valida
-from helpers import borrarPantalla,gotoxy
+from console_gotoxy import gotoxy
 from crudArhivos import Archivo
 from entidadesRol import *
 from datetime import date
-import time
+
+
+# Envio de ENTIDADES por relacion de agregación.
+def recibo_clase_agregacion(clase='', tit_met='', mensaje='', mensaje_error='', nombre_arch='',
+                            ident_inc='', col=0, fil=0):
+    """Devuelve una instancia de la clase."""
+    while True:
+        clean_screen()
+        validar = Valida(tit_met)
+        archi_agg = Archivo(nombre_arch)
+        entidades = archi_agg.leer_v2()
+        _id = validar.solo_id(nombre_arch, mensaje, ident_inc, mensaje_error, col, fil)
+        clase_utilizar = ''
+        for entidad in entidades:
+            if _id in entidad:
+                clase_utilizar = entidad
+                break
+        # En el caso de que se agg. archivos en la ejecucion del programa, refrescar la carga del programa.
+        try:
+            if clase == 'departamento':
+                return Departamento(clase_utilizar[1], clase_utilizar[0])
+            if clase == 'cargo':
+                return Cargo(clase_utilizar[1], clase_utilizar[0])
+        except IndexError:
+            clean_screen()
+            gotoxy(col+5, fil-2); print('ACTUALIZANDO PROGRAMA!!!')
+            espera_consola(3, False)
+
+
 # Procesos de las Opciones del Menu Mantenimiento
 def empAdministrativos():
-    pass
+    TITULO_METODO = "MANTENIMIENTO DE EMPLEADO ADMINISTRATIVO"
+    validar = Valida(TITULO_METODO)
+    _id = validar.solo_id_auto("administrativo.txt", 'ADM')
+    fec_ing = validar.solo_fecha("Fecha de Ingreso (año-mes-dia): ", "Ingresa una fecha correcta...",
+                                 15, 4)
+    nom = validar.solo_letras("Nombre: ", "Ingresa un nombre correcto...", 15, 4) 
+    ci = validar.solo_cedula("C.I. (Cédula de Identidad): ", "Ingresa una cédula correcta...", 15, 4)
+    tel = validar.solo_telefono("Teléfono: ", "Ingresa un teléfono correcto...", 15, 4)
+    dire = validar.solo_letras("Dirección: ", "Ingresa una direccion correcta...", 15, 4)
+    sue = validar.solo_decimales("Sueldo: ", "Ingresa un sueldo válido...", 15, 4) 
+    com = validar.solo_respuesta("Comisión (si/no): ", "Ingresa una respuesta válida...", 15, 4)
+    dep = recibo_clase_agregacion("departamento", TITULO_METODO, "Departamento (ID): ",
+                                  "Ingrese un ID correcto...", "departamento.txt", "DEP", 15, 4)
+    car = recibo_clase_agregacion("cargo", TITULO_METODO, "Cargo (ID): ", "Ingrese un ID correcto...",
+                                  "cargo.txt", "CAR", 15, 4)
+    empleado_admin = Administrativo(nom, dep, car, dire, ci, tel, fec_ing, sue, _id, com)
+    # Escritura de datos en un archivo!
+    archi_emp_adm = Archivo("administrativo.txt")
+    datos = empleado_admin.getEmpleado()
+    datos = '|'.join(datos)
+    archi_emp_adm.escribir([datos], 'a')
+
 def empObreros():
-    pass
+    TITULO_METODO = "MANTENIMIENTO DE EMPLEADO OBRERO"
+    validar = Valida(TITULO_METODO)
+    _id = validar.solo_id_auto("administrativo.txt", 'ADM')
+    fec_ing = validar.solo_fecha("Fecha de Ingreso (año-mes-dia): ", "Ingresa una fecha correcta...",
+                                 15, 4)
+    nom = validar.solo_letras("Nombre: ", "Ingresa un nombre correcto...", 15, 4) 
+    ci = validar.solo_cedula("C.I. (Cédula de Identidad): ", "Ingresa una cédula correcta...", 15, 4)
+    tel = validar.solo_telefono("Teléfono: ", "Ingresa un teléfono correcto...", 15, 4)
+    dire = validar.solo_letras("Dirección: ", "Ingresa una direccion correcta...", 15, 4)
+    sue = validar.solo_decimales("Sueldo: ", "Ingresa un sueldo válido...", 15, 4) 
+    con_col = validar.solo_respuesta("Contrato Colectivo (si/no): ", "Ingresa una respuesta válida...",
+                                     15, 4)
+    dep = recibo_clase_agregacion("departamento", TITULO_METODO, "Departamento (ID): ",
+                                  "Ingrese un ID correcto...", "departamento.txt", "DEP", 15, 4)
+    car = recibo_clase_agregacion("cargo", TITULO_METODO, "Cargo (ID): ", "Ingrese un ID correcto...",
+                                  "cargo.txt", "CAR", 15, 4)
+    empleado_obrero = Obrero(nom, dep, car, dire, ci, tel, fec_ing, sue, _id, con_col)
+    # Escritura de datos en un archivo!
+    archi_emp_obr = Archivo("obrero.txt")
+    datos = empleado_obrero.getEmpleado()
+    datos = '|'.join(datos)
+    archi_emp_obr.escribir([datos], 'a')
+
 def cargos():
-   borrarPantalla()     
-   gotoxy(20,2);print("MANTENIMIENTO DE CARGOS")
-   gotoxy(15,4);print("Codigo: ")
-   gotoxy(15,5);print("Descripcion Cargo: ")
-   gotoxy(33,5)
-   desCargo = input()
-   archiCargo = Archivo("./archivos/cargo.txt","|")
-   cargos = archiCargo.leer()
-   if cargos : idSig = int(cargos[-1][0])+1
-   else: idSig=1
-   cargo = Cargo(desCargo,idSig)
-   datos = cargo.getCargo()
-   datos = '|'.join(datos)
-   archiCargo.escribir([datos],"a")
+    TITULO_METODO = "MANTENIMIENTO DE CARGOS"
+    validar = Valida(TITULO_METODO)
+    # _id =
+    clean_screen()     
+    gotoxy(20,2);print("MANTENIMIENTO DE CARGOS")
+    gotoxy(15,4);print("Codigo: ")
+    gotoxy(15,5);print("Descripcion Cargo: ")
+    gotoxy(33,5)
+    desCargo = input()
+    archiCargo = Archivo("cargo.txt")
+    cargos = archiCargo.leer()
+    cargo = Cargo(desCargo, 'CAR19')
+    datos = cargo.getCargo()
+    datos = '|'.join(datos)
+    archiCargo.escribir([datos],"a")
+
 # ...........................................................
 # Opciones del Menu Novedades
 def sobretiempos():
-   borrarPantalla()     
+   clean_screen()     
    gotoxy(20,2);print("INGRESO DE HORAS EXTRAS")
    empleado,entEmpleado = [],None
    aamm,h50,h100=0,0,0
@@ -41,7 +116,7 @@ def sobretiempos():
           gotoxy(35,5);print(entEmpleado.nombre)
       else: 
          gotoxy(27,5);print("No existe Empleado con ese codigo[{}]:".format(id))
-         time.sleep(2);gotoxy(27,5);print(" "*40)
+         espera_consola();gotoxy(27,5);print(" "*40)
     
     
    gotoxy(15,6);print("Periodo[aaaamm]")
@@ -73,7 +148,7 @@ def prestamos():
 
 # opciones de Rol de Pago
 def rolAdministrativo():
-   borrarPantalla()
+   clean_screen()
    # Se ingresa los datos del rol a procesar     
    gotoxy(20,2);print("ROL ADMINISTRATIVO")
    aamm=0
@@ -125,7 +200,7 @@ def rolAdministrativo():
    input("               Presione una tecla continuar...")  
 
 def consultaRol():
-   borrarPantalla()
+   clean_screen()
    validar = Valida()
    # Se ingresa los datos del rol a Consultar     
    gotoxy(20,2);print("CONSULTA DE ROL OBRERO - ADMINISTRATIVO")
@@ -175,51 +250,64 @@ def consultaRol():
 def rolObrero():
     pass
 
-# Menu Proceso Principal
-opc=''
-while opc !='5':  
-    borrarPantalla()      
-    menu = Menu("Menu Principal",["1) Mantenimiento","2) Novedades","3) Rol de Pago","4) Consultas","5) Salir"],20,10)
-    opc = menu.menu()
-    if opc == "1":
-        opc1 = ''
-        while opc1 !='7':
-            borrarPantalla()    
-            menu1 = Menu("Menu Mantenimiento",["1) Empleados Administratvos","2) Empleados Obreros","3) Cargos","4) Departamentos","5) Empresa","6) Parametros","7) Salir"],20,10)
-            opc1 = menu1.menu()
-            if opc1 == "1":
-                empAdministrativos()
-            elif opc1 == "3":
-                cargos()
-                        
-    elif opc == "2":
-            borrarPantalla()
-            menu2 = Menu("Menu Novedades",["1) Sobretiempo","2) Prestamos","3) Salir"],20,10)
-            opc2 = menu2.menu()
-            if opc2 == "1":
-                sobretiempos()
-            elif opc2 == "2":
-                prestamos()
-    elif opc == "3":
-            borrarPantalla()
-            menu3 = Menu("Menu Rol",["1) Rol Administrativos","2) Rol Obreros","3) Consulta Rol","4) Sobre Empleado","5) Salir"],20,10)
-            opc3 = menu3.menu()
-            if opc3 == "1":
-                rolAdministrativo()
-            elif opc3 == "2":
-                rolObrero()
-            elif opc3 == "3":
-                consultaRol()
-    elif opc == "4":
-            borrarPantalla()
-            menu4 = Menu("Menu Consultas",["1) Empleados","2) Cargos","3) Departamentos","4) Empresa","5) Parametros","6) Salir"],20,10)
-            opc4 = menu.menu()
-    elif opc == "5":
-           borrarPantalla()
-           print("Gracias por su visita....")
-    else:
-          print("Opcion no valida") 
 
-input("Presione una tecla para salir")
-borrarPantalla()
+if __name__ == '__main__':
+    # Menu Proceso Principal
+    opc = ''
+    while opc !='4':  
+        clean_screen()
+        menu = Menu("Menu Principal", ["1) Mantenimiento", "2) Novedades", "3) Rol de Pago", "4) Salir"],
+                    "-"*25, 20, 10)
+        opc = menu.menu().replace(' ', '')
+        if opc == '1':  # MANTENIMIENTO
+            opc1 = ''
+            while opc1 !='7':
+                clean_screen()    
+                menu1 = Menu("Menu Mantenimiento", 
+                             ["1) Empleados Administrativos", "2) Empleados Obreros", "3) Cargos",
+                              "4) Departamentos", "5) Empresa", "6) Parametros", "7) Salir"
+                             ], '-'*28, 20, 10)
+                opc1 = menu1.menu().replace(' ', '')
+                if opc1 == '1':
+                    empAdministrativos()
+                elif opc1 == '2':
+                    empObreros()
+                elif opc1 == '3':
+                    cargos()
+                elif opc1 == '4':
+                    #TODO: DEPARTMANETO METODO EN NOMINA.
+                    pass
+                elif opc1 == '5':
+                    #TODO: EMPRESA METODO EN NOMINA.
+                    pass
+                elif opc1 == '6':
+                    #TODO: PARAMETROS METODO EN NOMINA.
+                    pass
+                elif opc1 == '7':
+                    pass
+        elif opc == "2":  # NOVEDADES
+                clean_screen()
+                menu2 = Menu("Menu Novedades",["1) Sobretiempo","2) Prestamos","3) Salir"],20,10)
+                opc2 = menu2.menu()
+                if opc2 == "1":
+                    sobretiempos()
+                elif opc2 == "2":
+                    prestamos()
+        elif opc == "3":  # ROL DE PAGO
+                clean_screen()
+                menu3 = Menu("Menu Rol",["1) Rol Administrativos","2) Rol Obreros","3) Consulta Rol","4) Sobre Empleado","5) Salir"],20,10)
+                opc3 = menu3.menu()
+                if opc3 == "1":
+                    rolAdministrativo()
+                elif opc3 == "2":
+                    rolObrero()
+                elif opc3 == "3":
+                    consultaRol()
+        elif opc == '4':  # SALIR
+               clean_screen()
+               print("Gracias por su visita....")
+        else:  # OPCION INVALIDA
+              print("Opcion no valida") 
 
+    input("Presione una tecla <-- para salir...")
+    clean_screen()
