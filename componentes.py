@@ -167,17 +167,18 @@ class Valida:
     def solo_periodo_doble_lista(self, lista1, lista2, mensaje, mensaje_error, col, fil) -> date:
         clean_screen()
         while True:
+            fila_clases = 0
             entro_tratamiento1 = False
             gotoxy(col+5, fil-2); print(self.__tit_met)
             gotoxy(col, fil); print(mensaje)
-            # # Imprimir periodos de clase
-            # fila_clases = fil+9
-            # for clase in lista1:
-            #     gotoxy(col-15, fila_clases); print(clase)
-            #     fila_clases += 1
-            # for clase in lista2:
-            #     gotoxy(col-15, fila_clases); print(clase)
-            #     fila_clases += 1
+            # Imprimir periodos de clase
+            fila_clases = fil+9
+            for clase in lista1:
+                gotoxy(col-15, fila_clases); print(clase)
+                fila_clases += 1
+            for clase in lista2:
+                gotoxy(col-15, fila_clases); print(clase)
+                fila_clases += 1
             gotoxy(col+len(mensaje), fil)
             valor = input('').replace(' ', '').split('-')
             if len(valor) > 2:

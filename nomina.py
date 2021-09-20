@@ -1,3 +1,4 @@
+from tkinter import NONE
 from operative_system.limpiar_consola import clean_screen
 from espera_consola.retraso import espera_consola
 from componentes import Menu,Valida
@@ -299,19 +300,30 @@ def prestamos():
     leer_administrativo = archi_adm.leer_v2()
     archi_obr = Archivo("obrero.txt")
     leer_obrero = archi_obr.leer_v2()
-    if leer_obrero and leer_administrativo:
+    if leer_obrero or leer_administrativo:
         validar = Valida(TITULO_METODO)
         _id = validar.solo_id_auto("prestamo.txt", "PRE")
         ingreso_empl = validar.solo_empleados("Tipo de empleado (Administrativo, Obrero): ",
                                               "Ingrese un empleado válido...", 15, 4)
-        if ingreso_empl == "ADMINISTRATIVO":
+        if ingreso_empl == "ADMINISTRATIVO" and leer_administrativo:
             emp = recibo_clase_agregacion(
                 "administrativo", TITULO_METODO, "Empleado Administrativo (ID): ",
                 "Ingresa un ID correcto...", "administrativo.txt", "ADM", 15, 4
             )
-        else:
+        elif ingreso_empl == "OBRERO" and leer_obrero:
             emp = recibo_clase_agregacion("obrero", TITULO_METODO, "Empleado Obrero (ID): ",
                                           "Ingresa un ID correcto...", "obrero.txt", "OBR", 15, 4)
+        else:
+            clean_screen()
+            gotoxy(20, 2); print(TITULO_METODO)
+            if not leer_administrativo:
+                gotoxy(15, 4); print("Se necesita registros en el archivo")
+                gotoxy(15, 5); print(" administrativo para funcionar!!!")
+            elif not leer_obrero:
+                gotoxy(15, 4); print("Se necesita registros en el archivo")
+                gotoxy(15, 5); print(" obrero para funcionar!!!")
+            gotoxy(15, 7); espera_consola(5, False)
+            return None
         fec = validar.solo_fecha_sobretiempo_prestamo(emp.fechaIngreso, "Fecha del sobretiempo: ",
                                                       "Ingresa una fecha correcta...", 15, 4)
         valo = validar.solo_decimales("Cantidad: $", "Ingresa una cantidad correcta...", 15, 4)
@@ -327,13 +339,7 @@ def prestamos():
         gotoxy(20, 2); print(TITULO_METODO)
         if not leer_administrativo and not leer_obrero:
             gotoxy(15, 4); print("Se necesita registros en los archivos")
-            gotoxy(15, 5); print(" administrativo y obrero para funcionar!!!")
-        elif not leer_administrativo:
-            gotoxy(15, 4); print("Se necesita registros en el archivo")
-            gotoxy(15, 5); print(" administrativo para funcionar!!!")
-        elif not leer_obrero:
-            gotoxy(15, 4); print("Se necesita registros en el archivo")
-            gotoxy(15, 5); print(" obrero para funcionar!!!")
+            gotoxy(15, 5); print(" obrero o administrativo para funcionar!!!")
         gotoxy(15, 7); espera_consola(5, False)
 
 
@@ -360,6 +366,13 @@ def rolAdministrativo():
         validar = Valida(TITULO_METODO)
         salir = ''
         while salir != ':!q':
+            # Volver a leer los archivos para refrescar si se cambia algo en media ejecucion.
+            leer_administrativo = archi_adm.leer_v2()
+            leer_departamento = archi_dep.leer_v2()
+            leer_cargo = archi_car.leer_v2()
+            leer_deducciones = archi_dedu.leer_v2()
+            leer_empresa = archi_emp.leer_v2()
+            leer_prestamos = archi_pres.leer_v2()
             nom_per = validar.solo_periodo(leer_prestamos, "Periodo (año-mes): ",
                                            "Ingresa un periodo correcto...", 15, 4)
             # Calculo de la Nomina por cada periodo existente en prestamos.
@@ -413,7 +426,7 @@ def rolAdministrativo():
         if entro_nomina:
             empr = Empresa(leer_empresa[0][0], leer_empresa[0][1], leer_empresa[0][2], leer_empresa[0][3])
             nomina.mostrarCabeceraNomina(
-                empr.razonSocial, empr.direccion, empr.telefono, empr.ruc, "A D M I N I S T R A T I V O"
+                empr.razonSocial, empr.direccion, empr.telefono, empr.ruc, "A D M I N I S T R A T I V O S"
             )
             nomina.mostrarDetalleNomina("administrativo", nom_per)
     else:
@@ -480,6 +493,7 @@ def rolObrero():
                                                        "Ingresa un periodo correcto...", 15, 4)
             if not leer_sobretiempo: leer_sobretiempo = ['']
             # Dirigir bucle entorno a todos los empleados.
+            # Memoization se encargara de no volver a registrar datos repetidos.
             memoization_sobretiempo = []
             memoization_prestamo = []
             for empleado in leer_obrero:
@@ -490,164 +504,112 @@ def rolObrero():
                         perio_prest = prestamo[2].split('-')
                         periodo_prestamo = date(int(perio_prest[0]), int(perio_prest[1]), 1)
                         if ((empleado[0] == sobretiempo[1] ) and (nom_per == periodo_sobretiempo))\
-                            or ((empleado[0] == prestamo[1]) or (nom_per == periodo_prestamo)):
+                            or ((empleado[0] == prestamo[1]) and (nom_per == periodo_prestamo)):
+                            # Captura solo para sobretiempo.
                             if empleado[0] == sobretiempo[1] and nom_per == periodo_sobretiempo:
-                                if memoizat and (prestamo in memoization_prestamo):
-                                    break
-                                else:
-                                    print('\nsobretiempo:', sobretiempo)
-                                    input('')
-                                    memoization_prestamo.append(sobretiempo)
+                                if not memoization_sobretiempo\
+                                    or (sobretiempo not in memoization_sobretiempo):
+                                    # print('\nsobretiempo:', sobretiempo, end='')
+                                    # input('')
+                                    # print('prestamo:', prestamo)
+                                    # input('')
+                                    memoization_sobretiempo.append(sobretiempo)
+                            # Captura solo para prestamo
                             elif (empleado[0] == prestamo[1]) or (nom_per == periodo_prestamo):
-                                print('\nprestamo:', prestamo)
-                                input('')
+                                if not memoization_prestamo\
+                                    or (prestamo not in memoization_prestamo):
+                                    # print('\nprestamo:', prestamo, end='')
+                                    # input('')
+                                    # print('sobretiempo:', sobretiempo)
+                                    # input('')
+                                    memoization_prestamo.append(prestamo)
 
+            sobretiempo = memoization_sobretiempo
+            prestamo = memoization_prestamo
+            solo_sobr = []
+            solo_pres = []
+            relacion_doble = []
+            entro_rela_dobl = False
 
+            # Obtener la relacion del empleado que tiene en los periodos
+            # Si periodo_sobretiempo == periodo_prestamo, ¡Capturarlo!
+            if sobretiempo and prestamo:
+                entro_rela_dobl = True
+                for sobr in sobretiempo:
+                    for pres in prestamo:
+                        if sobr[1] == pres[1]:
+                            entro_nomina = True
+                            emp = recibo_clase_agregacion_auto(sobr[1], "obrero", "obrero.txt")
+                            ded = Deduccion(float(leer_deducciones[0][0]), float(leer_deducciones[0][1]),
+                                            float(leer_deducciones[0][2]))
+                            fec_pres = pres[2].split('-')
+                            fecha_prestamo = date(int(fec_pres[0]), int(fec_pres[1]), int(fec_pres[2]))
+                            presta = Prestamo(emp, fecha_prestamo, float(pres[3]), int(pres[4]), pres[0])
+                            fec_sob = sobr[2].split('-')
+                            fecha_sobr = date(int(fec_sob[0]), int(fec_sob[1]), int(fec_sob[2]))
+                            sobret = Sobretiempo(emp, fecha_sobr, int(sobr[3]), int(sobr[4]), sobr[0])
+                            nomina = Nomina(emp, nom_per, sobret, ded, presta)
+                            nomina.calcularNominaDetalle()  # Inicializar calculos internos de la nomina.
+                            # grabar cabecera del rol
+                            cabecera_identica = False
+                            archi_cab_rol1 = Archivo("rolCabObr.txt")
+                            leer_rol_cabecera1 = archi_cab_rol1.leer_v2()
+                            for cabecera in leer_rol_cabecera1:
+                                # Saber si hay ya registros identicos para evitar guardarlos de nuevo.
+                                if '|'.join(cabecera) == '|'.join(nomina.getNomina()):
+                                    cabecera_identica = True
+                            if not cabecera_identica:  # Si no hay cabecera identica grabar.
+                                archi_cab_rol1.escribir(['|'.join(nomina.getNomina())], 'a')
+                            # grabar detalle del rol
+                            detalle_identico = False
+                            archi_det_rol1 = Archivo("rolDetObr.txt")
+                            leer_rol_detalle1 = archi_det_rol1.leer_v2()
+                            for detalle in leer_rol_detalle1:
+                                if '|'.join(detalle) == '|'.join(nomina.getDetalleNomina()[0]):
+                                    detalle_identico = True
+                            if not detalle_identico:
+                                archi_det_rol1.escribir(['|'.join(nomina.getDetalleNomina()[0])], 'a')
+                            relacion_doble.append(sobr)
+                            relacion_doble.append(pres)
 
-            # # En el caso de que no existan registros validar para ingresar en el segundo for y
-            # # solo ingresar registros de prestamos para el empleado.
-            # if not leer_sobretiempo: leer_sobretiempo = ['']
-            # # Dirigir bucle entorno a todos los empleados.
-            # for empleado in leer_obrero:
-            #     for sobretiempo in leer_sobretiempo:
-            #         peroi_sob = sobretiempo[2].split('-')
-            #         periodo_sobretiempo = date(int(peroi_sob[0]), int(peroi_sob[1]), 1)
-            #         if (sobretiempo[1] == empleado[0] and nom_per == periodo_sobretiempo) \
-            #             or not sobretiempo:
-            #             emp = recibo_clase_agregacion_auto(empleado[0], "obrero", "obrero.txt")
-            #             ded = Deduccion(float(leer_deducciones[0][0]), float(leer_deducciones[0][1]),
-            #                                         float(leer_deducciones[0][2]))
-            #             # Si no hay sobretiempo no manipular nada para evitar error al
-            #             # enviar el objeto sobr al argumento de la Nomina.
-            #             if leer_sobretiempo:
-            #                 fec_sob = sobretiempo[2].split('-')
-            #                 fecha_sobr = date(int(fec_sob[0]), int(fec_sob[1]), int(fec_sob[2]))
-            #                 sobr = Sobretiempo(emp, fecha_sobr, int(sobretiempo[3]), 
-            #                                    int(sobretiempo[4]), sobretiempo[0])
-            #             else: sobr_vacio = 0
-            #             entro_prestamo = False
-            #             for prestamo in leer_prestamos:
-            #                 if prestamo[1][0:3] == 'OBR':  # Seleccionar empleados obreros
-            #                     perio_prest = prestamo[2].split('-')
-            #                     periodo_prestamo = date(int(perio_prest[0]), int(perio_prest[1]), 1)
-            #                     # Si id del empleado obrero es == al id del emp. obrero
-            #                     # Ingresar solo si los periodos coinciden.
-            #                     if prestamo[1] == empleado[0] and nom_per == periodo_prestamo:
-            #                         entro_prestamo = True
-            #                         fec_pres = prestamo[2].split('-')
-            #                         fecha_prestamo = date(int(fec_pres[0]), int(fec_pres[1]), int(fec_pres[2]))
-            #                         pres = Prestamo(emp, fecha_prestamo, float(prestamo[3]),
-            #                                         int(prestamo[4]), prestamo[0])
-            #                         if leer_sobretiempo:
-            #                             nomina = Nomina(emp, nom_per, sobr, ded, pres)
-            #                         else:  # Si no hay sobretiempo solo calculo el prestamo.
-            #                             nomina = Nomina(emp, nom_per, sobr_vacio, ded, pres)
-            #                         # Inicializar calculos internos de la nomina.
-            #                         nomina.calcularNominaDetalle()
-            #                         entro_nomina = True
-            #                         # grabar cabecera del rol
-            #                         cabecera_identica = False
-            #                         archi_cab_rol1 = Archivo("rolCabObr.txt")
-            #                         leer_rol_cabecera1 = archi_cab_rol1.leer_v2()
-            #                         for cabecera in leer_rol_cabecera1:
-            #                             # Saber si hay ya registros identicos para evitar guardarlos de nuevo.
-            #                             if '|'.join(cabecera) == '|'.join(nomina.getNomina()):
-            #                                 cabecera_identica = True
-            #                         if not cabecera_identica:  # Si no hay cabecera identica grabar.
-            #                             archi_cab_rol1.escribir(['|'.join(nomina.getNomina())], 'a')
-            #                         # grabar detalle del rol
-            #                         detalle_identico = False
-            #                         archi_det_rol1 = Archivo("rolDetObr.txt")
-            #                         leer_rol_detalle1 = archi_det_rol1.leer_v2()
-            #                         for detalle in leer_rol_detalle1:
-            #                             if '|'.join(detalle) == '|'.join(nomina.getDetalleNomina()[0]):
-            #                                 detalle_identico = True
-            #                         if not detalle_identico:
-            #                             archi_det_rol1.escribir(['|'.join(nomina.getDetalleNomina()[0])], 'a')
-            #             pres_vacio = 0
-            #             if sobretiempo:  # Si hay sobretiempo
-            #                 if entro_prestamo:
-            #                     nomina = Nomina(emp, nom_per, sobr, ded, pres)
-            #                 else:
-            #                     nomina = Nomina(emp, nom_per, sobr, ded, pres_vacio)
-            #             else:  # No hay sobretiempo
-            #                 if entro_prestamo:
-            #                     nomina = Nomina(emp, nom_per, sobr_vacio, ded, pres)
-            #                 else:
-            #                     nomina = Nomina(emp, nom_per, sobr_vacio, ded, pres_vacio)
-            #             # Inicializar calculos internos de la nomina.
-            #             nomina.calcularNominaDetalle()
-            #             entro_nomina = True
-            #             # grabar cabecera del rol
-            #             cabecera_identica = False
-            #             archi_cab_rol1 = Archivo("rolCabObr.txt")
-            #             leer_rol_cabecera1 = archi_cab_rol1.leer_v2()
-            #             for cabecera in leer_rol_cabecera1:
-            #                 # Saber si hay ya registros identicos para evitar guardarlos de nuevo.
-            #                 if '|'.join(cabecera) == '|'.join(nomina.getNomina()):
-            #                     cabecera_identica = True
-            #             if not cabecera_identica:  # Si no hay cabecera identica grabar.
-            #                 archi_cab_rol1.escribir(['|'.join(nomina.getNomina())], 'a')
-            #             # grabar detalle del rol
-            #             detalle_identico = False
-            #             archi_det_rol1 = Archivo("rolDetObr.txt")
-            #             leer_rol_detalle1 = archi_det_rol1.leer_v2()
-            #             for detalle in leer_rol_detalle1:
-            #                 if '|'.join(detalle) == '|'.join(nomina.getDetalleNomina()[0]):
-            #                     detalle_identico = True
-            #             if not detalle_identico:
-            #                 archi_det_rol1.escribir(['|'.join(nomina.getDetalleNomina()[0])], 'a')
+            if prestamo and entro_rela_dobl:
+                # Obtener solo el periodo del prestamo sin sobretiempo
+                for pres in prestamo:
+                    for pres_sobr in relacion_doble:
+                        # Si PRE == PRE de la relacion_doble ingresar
+                        # Para capturar prestamos diferentes
+                        if pres[0][0:3] == pres_sobr[0][0:3]:
+                            if pres not in relacion_doble and pres not in solo_pres:
+                                regis_prestamo = calculo_registro_prestamos(pres, leer_deducciones, nom_per)
+                                solo_pres.append(regis_prestamo[0])
+                entro_nomina = regis_prestamo[1]
+                nomina = regis_prestamo[2]
+            elif prestamo and not entro_rela_dobl:
+                for pres in prestamo:
+                    regis_prestamo = calculo_registro_prestamos(pres, leer_deducciones, nom_per)
+                    solo_pres.append(regis_prestamo[0])
+                entro_nomina = regis_prestamo[1]
+                nomina = regis_prestamo[2]
 
+            if sobretiempo and entro_rela_dobl:
+                # Obtener solo el periodo del sobretiempo sin prestamo
+                for sobr in sobretiempo:
+                    for sobr_pres in relacion_doble:
+                        # Si SOB == SOB de la relacion_doble ingresar
+                        # Para capturar sobretiempos diferentes
+                        if sobr[0][0:3] == sobr_pres[0][0:3]:
+                            if sobr not in relacion_doble and sobr not in solo_sobr:
+                                regis_sobretiempo = calculo_registro_sobretiempo(sobr, leer_deducciones, nom_per)
+                                solo_sobr.append(regis_sobretiempo[0])
+                entro_nomina = regis_sobretiempo[1]
+                nomina = regis_sobretiempo[2]
+            elif sobretiempo and not entro_rela_dobl:
+                for sobr in sobretiempo:
+                    regis_sobretiempo = calculo_registro_sobretiempo(sobr, leer_deducciones, nom_per)
+                    solo_sobr.append(regis_sobretiempo[0])
+                entro_nomina = regis_sobretiempo[1]
+                nomina = regis_sobretiempo[2]
 
-            # # Calculo Sobretiempo.
-            # for sobretiempo in leer_sobretiempo:
-            #     peroi_sob = sobretiempo[2].split('-')
-            #     periodo_sobretiempo = date(int(peroi_sob[0]), int(peroi_sob[1]), 1)
-            #     for empleado in leer_obrero:
-            #         # Si id del empleado obrero es == al id del emp. obrero
-            #         # Ingresar solo si los periodos coinciden.
-            #         if sobretiempo[1] == empleado[0] and nom_per == periodo_sobretiempo:
-            #             # Calculo Prestamos.
-            #             for prestamo in leer_prestamos:
-            #                 if prestamo[1][0:3] == 'OBR':  # Seleccionar empleados obreros
-            #                     perio_prest = prestamo[2].split('-')
-            #                     periodo_prestamo = date(int(perio_prest[0]), int(perio_prest[1]), 1)
-            #                     # Si id del empleado obrero es == al id del emp. obrero
-            #                     # Ingresar solo si los periodos coinciden.
-            #                     if prestamo[1] == empleado[0] and nom_per == periodo_prestamo:
-            #                         entro_nomina = True
-            #                         emp = recibo_clase_agregacion_auto(empleado[0], "obrero", "obrero.txt")
-            #                         ded = Deduccion(float(leer_deducciones[0][0]), float(leer_deducciones[0][1]),
-            #                                         float(leer_deducciones[0][2]))
-            #                         fec_pres = prestamo[2].split('-')
-            #                         fecha_prestamo = date(int(fec_pres[0]), int(fec_pres[1]), int(fec_pres[2]))
-            #                         pres = Prestamo(emp, fecha_prestamo, float(prestamo[3]),
-            #                                         int(prestamo[4]), prestamo[0])
-            #                         fec_sob = sobretiempo[2].split('-')
-            #                         fecha_sobr = date(int(fec_sob[0]), int(fec_sob[1]), int(fec_sob[2]))
-            #                         sobr = Sobretiempo(emp, fecha_sobr, int(sobretiempo[3]),
-            #                                            int(sobretiempo[4]), sobretiempo[0])
-            #                         nomina = Nomina(emp, nom_per, sobr, ded, pres)
-            #                         nomina.calcularNominaDetalle()  # Inicializar calculos internos de la nomina.
-            #                         # grabar cabecera del rol
-            #                         cabecera_identica = False
-            #                         archi_cab_rol1 = Archivo("rolCabObr.txt")
-            #                         leer_rol_cabecera1 = archi_cab_rol1.leer_v2()
-            #                         for cabecera in leer_rol_cabecera1:
-            #                             # Saber si hay ya registros identicos para evitar guardarlos de nuevo.
-            #                             if '|'.join(cabecera) == '|'.join(nomina.getNomina()):
-            #                                 cabecera_identica = True
-            #                         if not cabecera_identica:  # Si no hay cabecera identica grabar.
-            #                             archi_cab_rol1.escribir(['|'.join(nomina.getNomina())], 'a')
-            #                         # grabar detalle del rol
-            #                         detalle_identico = False
-            #                         archi_det_rol1 = Archivo("rolDetObr.txt")
-            #                         leer_rol_detalle1 = archi_det_rol1.leer_v2()
-            #                         for detalle in leer_rol_detalle1:
-            #                             if '|'.join(detalle) == '|'.join(nomina.getDetalleNomina()[0]):
-            #                                 detalle_identico = True
-            #                         if not detalle_identico:
-            #                             archi_det_rol1.escribir(['|'.join(nomina.getDetalleNomina()[0])], 'a')
             if not entro_nomina:
                 gotoxy(20, 2); print(TITULO_METODO)
                 gotoxy(15, 4); print('No esta disponible ese periodo para calcular la nomina!!!')
@@ -658,7 +620,7 @@ def rolObrero():
         if entro_nomina:
             empr = Empresa(leer_empresa[0][0], leer_empresa[0][1], leer_empresa[0][2], leer_empresa[0][3])
             nomina.mostrarCabeceraNomina(
-                empr.razonSocial, empr.direccion, empr.telefono, empr.ruc, "O B R E R O"
+                empr.razonSocial, empr.direccion, empr.telefono, empr.ruc, "O B R E R O S"
             )
             nomina.mostrarDetalleNomina("obrero", nom_per)
     else:
@@ -691,53 +653,69 @@ def rolObrero():
         gotoxy(15, 7); espera_consola(5, False)
 
 
-# def consultaRol():
-#    clean_screen()
-#    validar = Valida()
-#    # Se ingresa los datos del rol a Consultar     
-#    gotoxy(20,2);print("CONSULTA DE ROL OBRERO - ADMINISTRATIVO")
-#    rol=0
-#    aamm=""
-#    gotoxy(15,4);print("Obrero-Administrativo(O/A): ")
-#    gotoxy(15,6);print("Periodo[aaaamm]")
-#    gotoxy(44,4)
-#    rol=input().upper()
-#    aamm=validar.solo_numeros("Error: Solo numeros",23,6)
-#    gotoxy(15,7);print("Esta seguro de consultar el Rol(s/n):")
-#    gotoxy(54,7);procesar = input().lower()
-#    if procesar == "s":
-#         if rol == "A": 
-#             tit = "A D M I N I S T R A T I V O"
-#             archiRolCab = Archivo("./archivos/rolCabAdm.txt","|")
-#             archiRolDet = Archivo("./archivos/rolDetAdm.txt","|")
-#         else: 
-#             tit = "O B R E R O"
-#             archiRolCab = Archivo("./archivos/rolCabObr.txt","|")
-#             archiRolDet = Archivo("./archivos/rolDetObr.txt","|")
-#         cabrol = archiRolCab.buscar(aamm)
-#         if cabrol:
-#             entCabRol = Nomina(cabrol[1],cabrol[0])
-#             entCabRol.totIngresos=float(cabrol[2])
-#             entCabRol.totDescuentos=float(cabrol[3])
-#             entCabRol.totPagoNeto=float(cabrol[4])
-#             detalle= archiRolDet.buscarLista(aamm)
-#             for det in detalle:
-#                 entCabRol.detalleNomina.append(det[1:])    
-#             # print(entCabRol.getNomina())
-#             # print(entCabRol.getDetalle())
-#             # input()
-#             # imprimir rol    
-#             archiEmpresa = Archivo("./archivos/empresa.txt","|")
-#             empresa = archiEmpresa.leer()[0]
-#             entEmpresa = Empresa(empresa[0],empresa[1],empresa[2],empresa[3])
-#             entCabRol.mostrarCabeceraNomina(entEmpresa.razonSocial,entEmpresa.direccion,entEmpresa.telefono,entEmpresa.ruc,tit)
-#             entCabRol.mostrarDetalleNomina()
-#         else:
-#             gotoxy(10,10);input("No existe rol con ese periodo\n presione una tecla para continuar...")     
-            
-#    else:
-#        gotoxy(10,10);input("Consulta Cancelada\n presione una tecla para continuar...")     
-#    input("               Presione una tecla continuar...")  
+#.....................................................................................
+# Calculos para los registros de sobretiempo y prestamo
+def calculo_registro_sobretiempo(sobr, leer_deducciones, nom_per):
+    entro_nomina = True
+    emp = recibo_clase_agregacion_auto(sobr[1], "obrero", "obrero.txt")
+    ded = Deduccion(float(leer_deducciones[0][0]), float(leer_deducciones[0][1]),
+                    float(leer_deducciones[0][2]))
+    fec_sob = sobr[2].split('-')
+    fecha_sobr = date(int(fec_sob[0]), int(fec_sob[1]), int(fec_sob[2]))
+    sobret = Sobretiempo(emp, fecha_sobr, int(sobr[3]), int(sobr[4]), sobr[0])
+    nomina = Nomina(emp, nom_per, sobret, ded, 0)
+    nomina.calcularNominaDetalle()  # Inicializar calculos internos de la nomina.
+    # grabar cabecera del rol
+    cabecera_identica = False
+    archi_cab_rol1 = Archivo("rolCabObr.txt")
+    leer_rol_cabecera1 = archi_cab_rol1.leer_v2()
+    for cabecera in leer_rol_cabecera1:
+        # Saber si hay ya registros identicos para evitar guardarlos de nuevo.
+        if '|'.join(cabecera) == '|'.join(nomina.getNomina()):
+            cabecera_identica = True
+    if not cabecera_identica:  # Si no hay cabecera identica grabar.
+        archi_cab_rol1.escribir(['|'.join(nomina.getNomina())], 'a')
+    # grabar detalle del rol
+    detalle_identico = False
+    archi_det_rol1 = Archivo("rolDetObr.txt")
+    leer_rol_detalle1 = archi_det_rol1.leer_v2()
+    for detalle in leer_rol_detalle1:
+        if '|'.join(detalle) == '|'.join(nomina.getDetalleNomina()[0]):
+            detalle_identico = True
+    if not detalle_identico:
+        archi_det_rol1.escribir(['|'.join(nomina.getDetalleNomina()[0])], 'a')
+    return(sobr, entro_nomina, nomina)
+
+def calculo_registro_prestamos(pres, leer_deducciones, nom_per):
+    entro_nomina = True
+    emp = recibo_clase_agregacion_auto(pres[1], "obrero", "obrero.txt")
+    ded = Deduccion(float(leer_deducciones[0][0]), float(leer_deducciones[0][1]),
+                    float(leer_deducciones[0][2]))
+    fec_pres = pres[2].split('-')
+    fecha_prestamo = date(int(fec_pres[0]), int(fec_pres[1]), int(fec_pres[2]))
+    presta = Prestamo(emp, fecha_prestamo, float(pres[3]), int(pres[4]), pres[0])
+    nomina = Nomina(emp, nom_per, 0, ded, presta)
+    nomina.calcularNominaDetalle()  # Inicializar calculos internos de la nomina.
+    # grabar cabecera del rol
+    cabecera_identica = False
+    archi_cab_rol1 = Archivo("rolCabObr.txt")
+    leer_rol_cabecera1 = archi_cab_rol1.leer_v2()
+    for cabecera in leer_rol_cabecera1:
+        # Saber si hay ya registros identicos para evitar guardarlos de nuevo.
+        if '|'.join(cabecera) == '|'.join(nomina.getNomina()):
+            cabecera_identica = True
+    if not cabecera_identica:  # Si no hay cabecera identica grabar.
+        archi_cab_rol1.escribir(['|'.join(nomina.getNomina())], 'a')
+    # grabar detalle del rol
+    detalle_identico = False
+    archi_det_rol1 = Archivo("rolDetObr.txt")
+    leer_rol_detalle1 = archi_det_rol1.leer_v2()
+    for detalle in leer_rol_detalle1:
+        if '|'.join(detalle) == '|'.join(nomina.getDetalleNomina()[0]):
+            detalle_identico = True
+    if not detalle_identico:
+        archi_det_rol1.escribir(['|'.join(nomina.getDetalleNomina()[0])], 'a')
+    return(pres, entro_nomina, nomina)
 
 
 if __name__ == '__main__':
