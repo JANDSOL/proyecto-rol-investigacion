@@ -16,7 +16,7 @@ class Archivo:
 
     def leer_v2(self) -> list:
         try:
-            with open(self.__archivo, mode='r+', encoding="utf-8") as myFile:
+            with open(self.__archivo, mode='r', encoding="utf-8") as myFile:
                 lista = []
                 for parrafo in myFile:
                     if '\n' in parrafo:
@@ -28,7 +28,7 @@ class Archivo:
         except IOError: lista = []
         return lista
     
-    def buscar(self,buscado): 
+    def buscar(self, buscado): 
         resultado = []              
         with open(self.__archivo, mode='r', encoding='utf-8') as myFile:
             for linea in myFile:

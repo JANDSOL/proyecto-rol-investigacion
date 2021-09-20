@@ -1,3 +1,4 @@
+from entidadesRol import Administrativo
 from unicodedata import normalize as normalizar_cadena
 from datetime import date
 from operative_system.limpiar_consola import clean_screen
@@ -64,40 +65,34 @@ class Valida:
         #         gotoxy(col, fil+3); espera_consola()
     
     def solo_id(self, nom_arch, mensaje, inicio, mensaje_error, col, fil):
-        #TODO: IMPRIMIR LOS IDS
-        salir = False
         archi_id = Archivo(nom_arch)
         clean_screen()
-        while salir is False:
+        while True:
             lista = archi_id.leer_v2()
             gotoxy(col+5, fil-2); print(self.__tit_met)
             gotoxy(col, fil); print(mensaje)
-            gotoxy(col, fil+2); print("¡Ingresa exit() para salir!")
             # Imprimir Id de clase
-            fila_clases = fil+2
+            fila_clases = fil+9
             for clase in lista:
-                gotoxy(col+60, fila_clases); print(clase)
+                gotoxy(col-15, fila_clases); print(clase)
                 fila_clases += 1
             gotoxy(col+len(mensaje), fil)
             valor = input('').upper().replace(' ', '')
-            if valor != 'EXIT()':
-                print()
-                if valor[0:len(inicio)] == inicio:  # String de inicio del ID -> A1, A2...An
-                    try:
-                        # Asegurarse el ingreso de enteros despues del str inicial->A1...An
-                        int(valor[len(inicio):])
-                        valor_buscado = archi_id.buscar_id(lista, valor, inicio)
-                        if not valor_buscado:  # Si valor_buscado es False, retornar valor no repetido.
-                            gotoxy(col, fil+4); print("ID no encontrado, ingresa otro...")
-                            gotoxy(col, fil+5); espera_consola()
-                        else: return valor
-                    except ValueError:
-                        gotoxy(col, fil+4); print(mensaje_error)
-                        gotoxy(col, fil+5); espera_consola()
-                else:
-                    gotoxy(col, fil+4); print(mensaje_error)
-                    gotoxy(col, fil+5); espera_consola()
-            else: salir = True
+            if valor[0:len(inicio)] == inicio:  # String de inicio del ID -> A1, A2...An
+                try:
+                    # Asegurarse el ingreso de enteros despues del str inicial->A1...An
+                    int(valor[len(inicio):])
+                    valor_buscado = archi_id.buscar_id(lista, valor, inicio)
+                    if not valor_buscado:  # Si valor_buscado es False, retornar valor no repetido.
+                        gotoxy(col, fil+2); print("ID no encontrado, ingresa otro...")
+                        gotoxy(col, fil+3); espera_consola()
+                    else: return valor
+                except ValueError:
+                    gotoxy(col, fil+2); print(mensaje_error)
+                    gotoxy(col, fil+3); espera_consola()
+            else:
+                gotoxy(col, fil+2); print(mensaje_error)
+                gotoxy(col, fil+3); espera_consola()
     
     def solo_fecha(self, mensaje, mensaje_error, col, fil) -> date:
         clean_screen()
@@ -127,6 +122,137 @@ class Valida:
                         gotoxy(col, fil+2); print(mensaje_error)
                         gotoxy(col, fil+3); espera_consola()
 
+    def solo_periodo(self, lista, mensaje, mensaje_error, col, fil) -> date:
+        clean_screen()
+        while True:
+            entro_tratamiento1 = False
+            gotoxy(col+5, fil-2); print(self.__tit_met)
+            gotoxy(col, fil); print(mensaje)
+            # Imprimir periodos de clase
+            fila_clases = fil+9
+            for clase in lista:
+                gotoxy(col-15, fila_clases); print(clase)
+                fila_clases += 1
+            gotoxy(col+len(mensaje), fil)
+            valor = input('').replace(' ', '').split('-')
+            if len(valor) > 2:
+                gotoxy(col, fil+2); print(mensaje_error)
+                gotoxy(col, fil+3); espera_consola()
+            else:
+                # VALIDO INGRESO DE SOLO NUMEROS
+                try:
+                    anio = int(valor[0])
+                    mes = int(valor[1])
+                    dia = 1
+                except (IndexError, ValueError):
+                    gotoxy(col, fil+2); print(mensaje_error)
+                    gotoxy(col, fil+3); espera_consola()
+                    entro_tratamiento1 = True
+                if entro_tratamiento1 is False:
+                    # VALIDO LAS FECHAS
+                    try:
+                        periodo = date(anio, mes, dia)
+                    except (SyntaxError, NameError, ValueError, TypeError):
+                        gotoxy(col, fil+2); print(mensaje_error)
+                        gotoxy(col, fil+3); espera_consola()
+                        periodo = ''
+                    # Validar si hay el periodo
+                    for empleado in lista:
+                        perio_emp = empleado[2].split('-')
+                        periodo_empleado = date(int(perio_emp[0]), int(perio_emp[1]), 1)
+                        if periodo == periodo_empleado: return periodo
+                    gotoxy(col, fil+2); print("Periodo no encontrado, ingresa otro...")
+                    gotoxy(col, fil+3); espera_consola()
+    
+    def solo_periodo_doble_lista(self, lista1, lista2, mensaje, mensaje_error, col, fil) -> date:
+        clean_screen()
+        while True:
+            entro_tratamiento1 = False
+            gotoxy(col+5, fil-2); print(self.__tit_met)
+            gotoxy(col, fil); print(mensaje)
+            # # Imprimir periodos de clase
+            # fila_clases = fil+9
+            # for clase in lista1:
+            #     gotoxy(col-15, fila_clases); print(clase)
+            #     fila_clases += 1
+            # for clase in lista2:
+            #     gotoxy(col-15, fila_clases); print(clase)
+            #     fila_clases += 1
+            gotoxy(col+len(mensaje), fil)
+            valor = input('').replace(' ', '').split('-')
+            if len(valor) > 2:
+                gotoxy(col, fil+2); print(mensaje_error)
+                gotoxy(col, fil+3); espera_consola()
+            else:
+                # VALIDO INGRESO DE SOLO NUMEROS
+                try:
+                    anio = int(valor[0])
+                    mes = int(valor[1])
+                    dia = 1
+                except (IndexError, ValueError):
+                    gotoxy(col, fil+2); print(mensaje_error)
+                    gotoxy(col, fil+3); espera_consola()
+                    entro_tratamiento1 = True
+                if entro_tratamiento1 is False:
+                    # VALIDO LAS FECHAS
+                    try:
+                        periodo = date(anio, mes, dia)
+                    except (SyntaxError, NameError, ValueError, TypeError):
+                        gotoxy(col, fil+2); print(mensaje_error)
+                        gotoxy(col, fil+3); espera_consola()
+                        periodo = ''
+                    # Validar si hay el periodo
+                    for empleado in lista1:
+                        perio_emp1 = empleado[2].split('-')
+                        periodo_empleado1 = date(int(perio_emp1[0]), int(perio_emp1[1]), 1)
+                        if periodo == periodo_empleado1: return periodo
+                    for empleado in lista2:
+                        perio_emp2 = empleado[2].split('-')
+                        periodo_empleado2 = date(int(perio_emp2[0]), int(perio_emp2[1]), 1)
+                        if periodo == periodo_empleado2: return periodo
+                    if periodo != '':
+                        gotoxy(col, fil+2); print("Periodo no encontrado, ingresa otro...")
+                        gotoxy(col, fil+3); espera_consola()
+
+    def solo_fecha_sobretiempo_prestamo(self, fechaIng_obrero, mensaje, mensaje_error, col, fil) -> date:
+        clean_screen()
+        while True:
+            entro_tratamiento1 = False
+            gotoxy(col+5, fil-2); print(self.__tit_met)
+            gotoxy(col, fil); print(mensaje)
+            gotoxy(col+len(mensaje), fil)
+            valor = input('').replace(' ', '').split('-')
+            if len(valor) > 3:
+                gotoxy(col, fil+2); print(mensaje_error)
+                gotoxy(col, fil+3); espera_consola()
+            else:
+                # VALIDO INGRESO DE SOLO NUMEROS
+                try:
+                    anio = int(valor[0])
+                    mes = int(valor[1])
+                    dia = int(valor[2])
+                except (IndexError, ValueError):
+                    gotoxy(col, fil+2); print(mensaje_error)
+                    gotoxy(col, fil+3); espera_consola()
+                    entro_tratamiento1 = True
+                if entro_tratamiento1 is False:
+                    # VALIDO FECHA
+                    try: 
+                        fecha_sobretiempo = date(anio, mes, dia)
+                    except (SyntaxError, NameError, ValueError, TypeError):
+                        gotoxy(col, fil+2); print(mensaje_error)
+                        gotoxy(col, fil+3); espera_consola()
+                    # VALIDO FECHA MAYOR AL INGRESO DEL EMPLEADO
+                    try:
+                        if fecha_sobretiempo >= fechaIng_obrero: return fecha_sobretiempo
+                        else:
+                            gotoxy(col, fil+2)
+                            print("Ingresa una fecha mayor a la que inicio a laboral el empleado...")
+                            gotoxy(col, fil+3); print(str(fechaIng_obrero))
+                            gotoxy(col, fil+4); espera_consola(5)
+                    except UnboundLocalError:
+                        pass
+
     def solo_numeros(self,mensaje_error,col,fil) -> str:
         while True: 
             gotoxy(col,fil)            
@@ -139,6 +265,22 @@ class Valida:
                 # time.sleep(1)
                 gotoxy(col,fil);print(" "*20)
         return valor
+    
+    def solo_entero(self, mensaje, mensaje_error, col, fil) -> int:
+        clean_screen()
+        while True:
+            gotoxy(col+5, fil-2); print(self.__tit_met)
+            gotoxy(col, fil); print(mensaje)
+            gotoxy(col+len(mensaje), fil)
+            try:
+                valor = int(input(''))
+                if valor >= 0: return valor
+                else:
+                    gotoxy(col, fil+2); print(mensaje_error)
+                    gotoxy(col, fil+3); espera_consola()
+            except ValueError:
+                gotoxy(col, fil+2); print(mensaje_error)
+                gotoxy(col, fil+3); espera_consola()
 
     def solo_letras(self, mensaje, mensaje_error, col, fil) -> str:
         clean_screen()
@@ -158,6 +300,21 @@ class Valida:
                 gotoxy(col, fil+2); print(mensaje_error)
                 gotoxy(col, fil+3); espera_consola()
             else: return valor_unido
+
+    def solo_empleados(self, mensaje, mensaje_error, col, fil) -> str:
+        clean_screen()
+        while True:
+            gotoxy(col+5, fil-2); print(self.__tit_met)
+            gotoxy(col, fil); print(mensaje)
+            gotoxy(col+len(mensaje), fil)
+            valor = input('').replace(' ', '').upper()
+            if valor == 'ADMINISTRATIVO':
+                return valor
+            elif valor == 'OBRERO':
+                return valor
+            else:
+                gotoxy(col, fil+2); print(mensaje_error)
+                gotoxy(col, fil+3); espera_consola()
 
     def solo_cedula(self, mensaje, mensaje_error, col, fil) -> str:
         CODIGOS_PROVINCIAS = (
@@ -183,6 +340,30 @@ class Valida:
                 gotoxy(col, fil+2); print(mensaje_error)
                 gotoxy(col, fil+3); espera_consola()
     
+    def solo_ruc(self, mensaje, mensaje_error, col, fil) -> str:
+        CODIGOS_PROVINCIAS = (
+            '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13',
+            '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '30'
+        )
+        clean_screen()
+        while True:
+            gotoxy(col+5, fil-2); print(self.__tit_met)
+            gotoxy(col, fil); print(mensaje)
+            gotoxy(col+len(mensaje), fil)
+            valor = input('').replace(' ', '')
+            if valor[0:2] in CODIGOS_PROVINCIAS and valor.isdigit():
+                if len(valor) == 13: return valor
+                else:
+                    if len(valor) < 13:
+                        gotoxy(col, fil+2); print("Te faltan {} dígitos...".format(13-len(valor)))
+                        gotoxy(col, fil+3); espera_consola()
+                    elif len(valor) > 13:
+                        gotoxy(col, fil+2); print("Sobrepasaste con {} dígitos...".format(len(valor)-13))
+                        gotoxy(col, fil+3); espera_consola()
+            else:
+                gotoxy(col, fil+2); print(mensaje_error)
+                gotoxy(col, fil+3); espera_consola()
+
     def solo_telefono(self, mensaje, mensaje_error, col, fil) -> str:
         CODIGOS_TEL_PROVINCIAS = ('02', '03', '04', '05', '06', '07', '5932', '5933', '5934', '5935',
                                                                       '5936', '5937')
@@ -243,8 +424,12 @@ class Valida:
             gotoxy(col+5, fil-2); print(self.__tit_met)
             gotoxy(col, fil); print(mensaje)
             gotoxy(col+len(mensaje), fil)
-            valor = input('').replace(' ', '')
-            try: return float(valor)
+            try:
+                valor = float(input(''))
+                if valor >= 0: return valor
+                else:
+                    gotoxy(col, fil+2); print(mensaje_error)
+                    gotoxy(col, fil+3); espera_consola()
             except ValueError:
                 gotoxy(col, fil+2); print(mensaje_error)
                 gotoxy(col, fil+3); espera_consola()
