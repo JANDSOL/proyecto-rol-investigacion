@@ -6,9 +6,10 @@ images/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
+venv/
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Ocultamiento momentaneo
-archivos/
+# Ocultamiento archivos
+nomina_archivos/

@@ -1,4 +1,4 @@
-from tkinter import NONE
+from os import path, mkdir
 from operative_system.limpiar_consola import clean_screen
 from espera_consola.retraso import espera_consola
 from componentes import Menu,Valida
@@ -643,12 +643,16 @@ def rolObrero():
         if not leer_empresa:
             gotoxy(15+cadena_anterior, 5); print("empresa, ")
             cadena_anterior += 9
-        if not leer_prestamos:
-            gotoxy(15+cadena_anterior, 5); print("prestamos, ")
-            cadena_anterior += 11
-        if not leer_sobretiempo:
-            gotoxy(15+cadena_anterior, 5); print("sobretiempo, ")
-            cadena_anterior += 13
+        if not leer_prestamos and not leer_sobretiempo:
+            gotoxy(15+cadena_anterior, 5); print("prestamos o sobretiempo, ")
+            cadena_anterior += 25
+        else:
+            if not leer_prestamos:
+                gotoxy(15+cadena_anterior, 5); print("prestamos, ")
+                cadena_anterior += 11
+            if not leer_sobretiempo:
+                gotoxy(15+cadena_anterior, 5); print("sobretiempo, ")
+                cadena_anterior += 13
         gotoxy(15+cadena_anterior, 5); print("para funcionar!!!")
         gotoxy(15, 7); espera_consola(5, False)
 
@@ -721,19 +725,22 @@ def calculo_registro_prestamos(pres, leer_deducciones, nom_per):
 if __name__ == '__main__':
     # Menu Proceso Principal
     opc = ''
-    while opc !='4':  
+    while opc !='4':
+        # Crear carpeta donde se alojan nuestros archivos si no existe.
+        if not path.isdir('./nomina_archivos'):
+            mkdir('./nomina_archivos')
         clean_screen()
-        menu = Menu("Menu Principal", ["1) Mantenimientos", "2) Novedades", "3) Rol de Pagos", "4) Salir"],
+        menu = Menu("MENÚ PRINCIPAL", ["1) Mantenimientos", "2) Novedades", "3) Roles de Pagos", "4) Salir"],
                     "-"*25, 20, 10)
         opc = menu.menu().replace(' ', '')
-
         if opc == '1':  # MANTENIMIENTO
             opc1 = ''
-            while opc1 !='7':
+            while opc1 != '7':
                 clean_screen()    
-                menu1 = Menu("Menu Mantenimiento", 
+                menu1 = Menu("MENÚ MANTENIMIENTO", 
                              ["1) Empleados Administrativos", "2) Empleados Obreros", "3) Cargos",
-                              "4) Departamentos", "5) Empresa", "6) Parametros", "7) Salir"
+                              "4) Departamentos", "5) Empresa", "6) Parametros (IESS, Comisión, Antiguedad)",
+                              "7) Salir"
                              ], '-'*28, 20, 10)
                 opc1 = menu1.menu().replace(' ', '')
                 if opc1 == '1':   empAdministrativos()
@@ -742,33 +749,47 @@ if __name__ == '__main__':
                 elif opc1 == '4': departamentos()
                 elif opc1 == '5': empresa()
                 elif opc1 == '6': parametros()
-
-        elif opc == "2":  # NOVEDADES
-            clean_screen()
-            menu2 = Menu("Menu Novedades",
-                         ["1) Sobretiempo", "2) Prestamos", "3) Salir"
-                         ], '-'*25, 20, 10)
-            opc2 = menu2.menu().replace(' ', '')
-            if opc2 == "1":   sobretiempos()
-            elif opc2 == "2": prestamos()
-
-        elif opc == "3":  # ROL DE PAGO
-            clean_screen()
-            menu3 = Menu("Menu Rol",
-                         ["1) Rol Empleados Administrativos", "2) Rol Empleados Obreros", "3) Salir"
-                         ], '-'*32, 20, 10)
-            opc3 = menu3.menu().replace(' ', '')
-            if opc3 == "1":   rolAdministrativo()
-            elif opc3 == "2": rolObrero()
-
+                elif opc1 == '7': pass
+                else:
+                    print()
+                    print(' '*13, "Opción no disponible 😥...")
+                    espera_consola(3, False)
+        elif opc == '2':  # NOVEDADES
+            opc2 = ''
+            while opc2 != '3':
+                clean_screen()
+                menu2 = Menu("MENÚ NOVEDADES",
+                             ["1) Sobretiempo", "2) Prestamos", "3) Salir"
+                             ], '-'*25, 20, 10)
+                opc2 = menu2.menu().replace(' ', '')
+                if opc2 == '1':   sobretiempos()
+                elif opc2 == '2': prestamos()
+                elif opc2 == '3': pass
+                else:
+                    print()
+                    print(' '*13, "Opción no disponible 😥...")
+                    espera_consola(3, False)
+        elif opc == '3':  # ROL DE PAGO
+            opc3 = ''
+            while opc3 != '3':
+                clean_screen()
+                menu3 = Menu("MENÚ ROLES DE PAGOS",
+                             ["1) Rol Empleados Administrativos", "2) Rol Empleados Obreros", "3) Salir"
+                             ], '-'*32, 20, 10)
+                opc3 = menu3.menu().replace(' ', '')
+                if opc3 == '1':   rolAdministrativo()
+                elif opc3 == '2': rolObrero()
+                elif opc3 == '3': pass
+                else:
+                    print()
+                    print(' '*13, "Opción no disponible 😥...")
+                    espera_consola(3, False)
         elif opc == '4':  # SALIR
             clean_screen()
             print("Gracias por su visita 😃....")
-
         else:  # OPCION INVALIDA
             print()
             print(' '*13, "Opción no disponible 😥...")
             espera_consola(3, False)
-
     input("Presione una tecla <-- para salir 🥴...")
     clean_screen()

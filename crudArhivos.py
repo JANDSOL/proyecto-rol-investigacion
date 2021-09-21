@@ -1,6 +1,6 @@
 class Archivo:
     def __init__(self, nombreArchivo='', separador='|'):
-        self.__archivo = './archivos/' + nombreArchivo
+        self.__archivo = './nomina_archivos/' + nombreArchivo
         self.__separador = separador
         
     def leer(self):
